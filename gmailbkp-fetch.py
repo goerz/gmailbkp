@@ -5,7 +5,6 @@
 """
 from ProcImap.ImapMailbox import ImapMailbox
 from ProcImap.Utils.MailboxFactory import MailboxFactory
-from mailbox import mbox
 import sys
 import hashlib
 import re
@@ -30,7 +29,7 @@ for label in labels:
     mailbox = ImapMailbox((server, label))
     for uid in mailbox.get_all_uids():
         if existing.has_key("%s.%s" % (label, uid)):
-            print "Skip %s.%s" % (label, uid) # DEBUG
+            print "Skip %s.%s" % (label, uid)
             continue
         message = mailbox.get(uid)
         msg_string = message.as_string()
@@ -40,7 +39,7 @@ for label in labels:
         outfile.write(msg_string)
         outfile.close()
         print >>record_file, "%s.%s : %s" % (label, uid, filename)
-        print "Stored %s.%s" % (label, uid) # DEBUG
+        print "Stored %s.%s" % (label, uid)
         record_file.flush()
     mailbox.close()
 record_file.close()
