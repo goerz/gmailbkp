@@ -7,6 +7,7 @@ from ProcImap.ImapMailbox import ImapMailbox
 from ProcImap.Utils.MailboxFactory import MailboxFactory
 import hashlib
 import re
+import os.path
 
 
 class DownloadError(Exception):
@@ -48,9 +49,10 @@ try:
                 raise DownloadError(message)
             filename = "%04i-%02i-%02i" % message.internaldate[:3]
             filename += "_%s.eml" % hashlib.sha224(msg_string).hexdigest()
-            outfile = open(filename, 'w')
-            outfile.write(msg_string)
-            outfile.close()
+            if not os.path.isfile(filename):
+                outfile = open(filename, 'w')
+                outfile.write(msg_string)
+                outfile.close()
             print >>record_file, "%s.%s : %s" % (label, uid, filename)
             print "Stored %s.%s" % (label, uid)
             record_file.flush()
