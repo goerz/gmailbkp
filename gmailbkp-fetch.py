@@ -7,15 +7,31 @@ from ProcImap.ImapMailbox import ImapMailbox
 from ProcImap.Utils.MailboxFactory import MailboxFactory
 import hashlib
 import re
-import os.path
-
+import os
+import sys
+from optparse import OptionParser
 
 class DownloadError(Exception):
     """ Raised if the Mail Message was not downloaded correctly """
     pass
 
+arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [path]",
+                            description = __doc__)
+
+arg_parser.add_option('-v', action='store_true', dest='verbose',
+                    default=False, help="Show status messages")
+arg_parser.add_option('-p', action='store_true', dest='print_names',
+                    default=False, help="Print names of newly created "
+                    "eml files")
+
+options, args = arg_parser.parse_args(sys.argv)
+if len(args) > 1:
+    os.chdir(args[1])
+
 mailboxes = MailboxFactory('/Users/goerz/.procimap/mailboxes.cfg')
+
 server = mailboxes.get_server('Gmail')
+
 labels = server.list()
 
 existing = {}
@@ -38,7 +54,7 @@ try:
         mailbox = ImapMailbox((server, label))
         for uid in mailbox.get_all_uids():
             if existing.has_key("%s.%s" % (label, uid)):
-                print "Skip %s.%s" % (label, uid)
+                if options.verbose: print "Skip %s.%s" % (label, uid)
                 continue
             size = mailbox.get_size(uid)
             message = mailbox.get(uid)
@@ -53,8 +69,9 @@ try:
                 outfile = open(filename, 'w')
                 outfile.write(msg_string)
                 outfile.close()
+                if options.print_names: print filename
             print >>record_file, "%s.%s : %s" % (label, uid, filename)
-            print "Stored %s.%s" % (label, uid)
+            if options.verbose: print "Stored %s.%s" % (label, uid)
             record_file.flush()
         mailbox.close()
 except KeyboardInterrupt:
