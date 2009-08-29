@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Delete all emails from record.txt that are not on the server anymore"""
+"""Delete all emails from record that are not on the server anymore"""
 from ProcImap.ImapMailbox import ImapMailbox
 from ProcImap.Utils.MailboxFactory import MailboxFactory
 import re
@@ -16,6 +16,9 @@ arg_parser.add_option('-v', action='store_true', dest='verbose',
 arg_parser.add_option('-c', action='store', dest='config',
                     default=os.environ['HOME']+"/.gmailbkp.conf", 
                     help="Use config file (default: ~/.gmaibkp.conf)")
+arg_parser.add_option('-r', action='store', dest='record',
+                    default='record.txt', 
+                    help="record file (default: record.txt)")
 
 options, args = arg_parser.parse_args(sys.argv)
 if len(args) > 1:
@@ -32,8 +35,8 @@ try:
 
     # read in record
     record = {}
-    shutil.copy('record.txt', 'record.txt~')
-    record_file = open('record.txt~')
+    shutil.copy(options.record, "%s~" % options.record)
+    record_file = open("%s~" % options.record)
     line_pattern = re.compile(r'(?P<luid>.*\.\d+) : (?P<filename>\d{4}-\d{2}-\d{2}_[0-9a-f]{56}\.eml)')
     for line in record_file:
         line_match = line_pattern.match(line)
@@ -79,7 +82,7 @@ except Exception, message:
     print message
 
 # write out result
-record_file = open('record.txt', 'w')
+record_file = open(options.record, 'w')
 for labeluid in labeluids:
     print >>record_file, "%s : %s" % (labeluid, record[labeluid])
 record_file.close()

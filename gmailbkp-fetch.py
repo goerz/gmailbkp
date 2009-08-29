@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Download all the messages in a Gmail acccount to eml files. Keep track of
-files in 'record.txt'"""
+files in a record file"""
 from ProcImap.ImapMailbox import ImapMailbox
 from ProcImap.Utils.MailboxFactory import MailboxFactory
 import hashlib
@@ -21,6 +21,9 @@ arg_parser.add_option('-v', action='store_true', dest='verbose',
 arg_parser.add_option('-c', action='store', dest='config',
                     default=os.environ['HOME']+"/.gmailbkp.conf", 
                     help="Use config file (default: ~/.gmaibkp.conf)")
+arg_parser.add_option('-r', action='store', dest='record',
+                    default='record.txt', 
+                    help="record file (default: record.txt)")
 arg_parser.add_option('-p', action='store_true', dest='print_names',
                     default=False, help="Print names of newly created "
                     "eml files")
@@ -52,7 +55,7 @@ if options.include == '': include = labels
 
 record = {}
 try:
-    record_file = open('record.txt')
+    record_file = open(options.record)
     line_pattern = re.compile(r'(?P<luid>.*\.\d+) : (?P<filename>\d{4}-\d{2}-\d{2}_[0-9a-f]{56}\.eml)')
     for line in record_file:
         line_match = line_pattern.match(line)
@@ -64,7 +67,7 @@ try:
 except IOError:
     pass
 
-record_file = open('record.txt', 'a')
+record_file = open(options.record, 'a')
 try:
     for label in labels:
         if not label in include: continue
