@@ -26,16 +26,26 @@ arg_parser.add_option('-c', action='store', dest='config',
 arg_parser.add_option('-p', action='store_true', dest='print_names',
                     default=False, help="Print names of newly created "
                     "eml files")
+arg_parser.add_option('--include', action='store', dest='include',
+                    default='', help="Skip the labels NOT in this list "
+                    "(comma separated)")
+arg_parser.add_option('--exclude', action='store', dest='exclude',
+                    default='', help="Skip the labels in this list "
+                    "(comma separated)")
 
 options, args = arg_parser.parse_args(sys.argv)
 if len(args) > 1:
     os.chdir(args[1])
+
 
 mailboxes = MailboxFactory(options.config)
 
 server = mailboxes.get_server('Gmail')
 
 labels = server.list()
+include = options.include.split(",")
+exclude = options.exclude.split(",")
+if options.include == '': include = labels
 
 existing = {}
 try:
@@ -54,6 +64,8 @@ except IOError:
 record_file = open('record.txt', 'a')
 try:
     for label in labels:
+        if not label in include: continue
+        if label in exclude: continue
         mailbox = ImapMailbox((server, label))
         for uid in mailbox.get_all_uids():
             if existing.has_key("%s.%s" % (label, uid)):
