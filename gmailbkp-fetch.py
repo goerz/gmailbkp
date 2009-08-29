@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-"""
-    Download all the messages in a Gmail acccount to eml files. Keep track of
-    files in 'record.txt'
-"""
+"""Download all the messages in a Gmail acccount to eml files. Keep track of
+files in 'record.txt'"""
 from ProcImap.ImapMailbox import ImapMailbox
 from ProcImap.Utils.MailboxFactory import MailboxFactory
 import hashlib
@@ -22,7 +20,7 @@ arg_parser.add_option('-v', action='store_true', dest='verbose',
                     default=False, help="Show status messages")
 arg_parser.add_option('-c', action='store', dest='config',
                     default=os.environ['HOME']+"/.gmailbkp.conf", 
-                    help="Use config file (default: ~/.gmaibkp.conf")
+                    help="Use config file (default: ~/.gmaibkp.conf)")
 arg_parser.add_option('-p', action='store_true', dest='print_names',
                     default=False, help="Print names of newly created "
                     "eml files")
@@ -32,6 +30,11 @@ arg_parser.add_option('--include', action='store', dest='include',
 arg_parser.add_option('--exclude', action='store', dest='exclude',
                     default='', help="Skip the labels in this list "
                     "(comma separated)")
+arg_parser.add_option('--search', action='store', dest='search',
+                    default='', help="Only store emails that match the "
+                    "specified search. The search string should be like the "
+                    "search syntax of the IMAP search command (RFC3501). E.g. "
+                    "('FLAGGED SINCE 1-Feb-1994 NOT FROM \"Smith\"'")
 
 options, args = arg_parser.parse_args(sys.argv)
 if len(args) > 1:
@@ -67,7 +70,11 @@ try:
         if not label in include: continue
         if label in exclude: continue
         mailbox = ImapMailbox((server, label))
-        for uid in mailbox.get_all_uids():
+        if options.search == '':
+            uids = mailbox.get_all_uids()
+        else:
+            uids = mailbox.search(options.search)
+        for uid in uids:
             if existing.has_key("%s.%s" % (label, uid)):
                 if options.verbose: print "Skip %s.%s" % (label, uid)
                 continue
