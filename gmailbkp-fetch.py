@@ -20,6 +20,9 @@ arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [path]",
 
 arg_parser.add_option('-v', action='store_true', dest='verbose',
                     default=False, help="Show status messages")
+arg_parser.add_option('-c', action='store', dest='config',
+                    default=os.environ['HOME']+"/.gmailbkp.conf", 
+                    help="Use config file (default: ~/.gmaibkp.conf")
 arg_parser.add_option('-p', action='store_true', dest='print_names',
                     default=False, help="Print names of newly created "
                     "eml files")
@@ -28,7 +31,7 @@ options, args = arg_parser.parse_args(sys.argv)
 if len(args) > 1:
     os.chdir(args[1])
 
-mailboxes = MailboxFactory('/Users/goerz/.procimap/mailboxes.cfg')
+mailboxes = MailboxFactory(options.config)
 
 server = mailboxes.get_server('Gmail')
 
