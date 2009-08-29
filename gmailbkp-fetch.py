@@ -50,14 +50,14 @@ include = options.include.split(",")
 exclude = options.exclude.split(",")
 if options.include == '': include = labels
 
-existing = {}
+record = {}
 try:
     record_file = open('record.txt')
     line_pattern = re.compile(r'(?P<luid>.*\.\d+) : (?P<filename>\d{4}-\d{2}-\d{2}_[0-9a-f]{56}\.eml)')
     for line in record_file:
         line_match = line_pattern.match(line)
         if line_match:
-            existing[line_match.group('luid')] = line_match.group('filename')
+            record[line_match.group('luid')] = line_match.group('filename')
         else:
             print "Can't understand line in record file"
     record_file.close()
@@ -75,7 +75,7 @@ try:
         else:
             uids = mailbox.search(options.search)
         for uid in uids:
-            if existing.has_key("%s.%s" % (label, uid)):
+            if record.has_key("%s.%s" % (label, uid)):
                 if options.verbose: print "Skip %s.%s" % (label, uid)
                 continue
             size = mailbox.get_size(uid)
