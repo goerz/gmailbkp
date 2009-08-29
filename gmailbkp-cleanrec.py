@@ -8,7 +8,7 @@ import sys
 import shutil
 from optparse import OptionParser
 
-arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [path]",
+arg_parser = OptionParser(usage = "gmailbkp-cleanrec.py [options] [path]",
                             description = __doc__)
 
 arg_parser.add_option('-v', action='store_true', dest='verbose',
