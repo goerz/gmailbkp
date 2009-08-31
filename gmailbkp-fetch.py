@@ -48,6 +48,8 @@ arg_parser.add_option('--maildir', action='store_true', dest='maildir',
                     "name of the eml files are not consistent with the "
                     "maildir standard, but mutt will be able to read the "
                     "folder as a maildir mailbox nonetheless")
+arg_parser.add_option('--raise', action='store_true', dest='raise_exception',
+                    default=False, help="Raise full exceptions")
 
 options, args = arg_parser.parse_args(sys.argv)
 if len(args) > 1:
@@ -99,13 +101,24 @@ try:
             if record.has_key("%s.%s" % (label, uid)):
                 if options.verbose: print "Skip %s.%s" % (label, uid)
                 continue
-            size = mailbox.get_size(uid)
-            message = mailbox.get(uid)
+            try:
+                size = mailbox.get_size(uid)
+                message = mailbox.get(uid)
+            except Exception, errormessage:
+                if options.raise_exception: raise
+                print "Skipped %s.%s due to Exception: %s" \
+                       % (label, uid, errormessage)
+                try:
+                    mailbox.reconnect()
+                except:
+                    #server = mailboxes.get_server('Gmail')
+                    mailbox = ImapMailbox((server.clone(), label))
+                continue
             msg_string = message.as_string()
             if message.size != size:
-                message = "Expected to download %s bytes. " % size
-                message += "Downloaded %s bytes. " % message.size
-                raise DownloadError(message)
+                errormessage = "Expected to download %s bytes. " % size
+                errormessage += "Downloaded %s bytes. " % message.size
+                raise DownloadError(errormessage)
             filename = "%04i-%02i-%02i" % message.internaldate[:3]
             filename += "_%s.eml" % hashlib.sha224(msg_string).hexdigest()
             if not os.path.isfile(filename):
@@ -119,8 +132,9 @@ try:
         mailbox.close()
 except KeyboardInterrupt:
     print ""
-except Exception, message:
+except Exception, errormessage:
+    if options.raise_exception: raise
     print "Program ended with exception. Run again."
-    print message
+    print errormessage
 
 record_file.close()
