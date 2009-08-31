@@ -27,6 +27,9 @@ arg_parser.add_option('-r', action='store', dest='record',
 arg_parser.add_option('-p', action='store_true', dest='print_names',
                     default=False, help="Print names of newly created "
                     "eml files")
+arg_parser.add_option('-s', action='store_true', dest='ignore_standard',
+                    default=False, help="Add the labels '[Gmail]/Trash' "
+                    "and '[Gmail]/Spam' to the exclude list.")
 arg_parser.add_option('--include', action='store', dest='include',
                     default='', help="Skip the labels NOT in this list "
                     "(comma separated)")
@@ -63,6 +66,9 @@ server = mailboxes.get_server('Gmail')
 labels = server.list()
 include = options.include.split(",")
 exclude = options.exclude.split(",")
+if options.ignore_standard:
+    exclude.append('[Gmail]/Spam')
+    exclude.append('[Gmail]/Trash')
 if options.include == '': include = labels
 
 record = {}
