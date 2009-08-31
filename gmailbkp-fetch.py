@@ -13,7 +13,7 @@ class DownloadError(Exception):
     """ Raised if the Mail Message was not downloaded correctly """
     pass
 
-arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [path]",
+arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [PATH]",
                             description = __doc__)
 
 arg_parser.add_option('-v', action='store_true', dest='verbose',
@@ -22,8 +22,8 @@ arg_parser.add_option('-c', action='store', dest='config',
                     default=os.environ['HOME']+"/.gmailbkp.conf", 
                     help="Use config file (default: ~/.gmaibkp.conf)")
 arg_parser.add_option('-r', action='store', dest='record',
-                    default='record.txt', 
-                    help="record file (default: record.txt)")
+                    default='record.txt', help="record file (default: "
+                    "record.txt). The filename is relative to the given PATH")
 arg_parser.add_option('-p', action='store_true', dest='print_names',
                     default=False, help="Print names of newly created "
                     "eml files")
@@ -38,11 +38,23 @@ arg_parser.add_option('--search', action='store', dest='search',
                     "specified search. The search string should be like the "
                     "search syntax of the IMAP search command (RFC3501). E.g. "
                     "('FLAGGED SINCE 1-Feb-1994 NOT FROM \"Smith\"'")
+arg_parser.add_option('--maildir', action='store_true', dest='maildir',
+                    default=False, help="Store eml files in a pseudo-maildir "
+                    "format. The folders 'new', 'cur', and 'tmp' will be "
+                    "created and all eml files will be written to 'cur'. The "
+                    "name of the eml files are not consistent with the "
+                    "maildir standard, but mutt will be able to read the "
+                    "folder as a maildir mailbox nonetheless")
 
 options, args = arg_parser.parse_args(sys.argv)
 if len(args) > 1:
     os.chdir(args[1])
-
+if options.maildir:
+    if not os.path.isdir('tmp'): os.mkdir('tmp')
+    if not os.path.isdir('cur'): os.mkdir('cur')
+    if not os.path.isdir('new'): os.mkdir('new')
+    options.record = os.path.join('..', options.record)
+    os.chdir('cur')
 
 mailboxes = MailboxFactory(options.config)
 
