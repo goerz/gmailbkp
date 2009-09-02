@@ -7,6 +7,7 @@ import hashlib
 import re
 import os
 import sys
+import pydb
 from optparse import OptionParser
 
 class DownloadError(Exception):
@@ -88,11 +89,15 @@ except IOError:
     pass
 
 record_file = open(options.record, 'a')
+mailbox = None
 try:
     for label in labels:
         if not label in include: continue
         if label in exclude: continue
-        mailbox = ImapMailbox((server, label))
+        if mailbox is None:
+            mailbox = ImapMailbox((server, label))
+        else:
+            mailbox.switch(label)
         if options.search == '':
             uids = mailbox.get_all_uids()
         else:
@@ -105,20 +110,36 @@ try:
                 size = mailbox.get_size(uid)
                 message = mailbox.get(uid)
             except Exception, errormessage:
+                record_file.flush()
                 if options.raise_exception: raise
                 print "Skipped %s.%s due to Exception: %s" \
-                       % (label, uid, errormessage)
+                    % (label, uid, errormessage)
                 try:
                     mailbox.reconnect()
                 except:
-                    #server = mailboxes.get_server('Gmail')
                     mailbox = ImapMailbox((server.clone(), label))
                 continue
-            msg_string = message.as_string()
             if message.size != size:
                 errormessage = "Expected to download %s bytes. " % size
                 errormessage += "Downloaded %s bytes. " % message.size
-                raise DownloadError(errormessage)
+                # retry
+                try:
+                    message = mailbox.get(uid)
+                    size = mailbox.get_size(uid)
+                except Exception, errormessage:
+                    record_file.flush()
+                    if options.raise_exception: raise
+                    print "Skipped %s.%s due to Exception: %s" \
+                        % (label, uid, errormessage)
+                    try:
+                        mailbox.reconnect()
+                    except:
+                        mailbox = ImapMailbox((server.clone(), label))
+                    continue
+                if message.size != size:
+                    raise DownloadError(errormessage)
+            if size == 0: raise DownloadError("Downloaded 0 bytes")
+            msg_string = message.as_string()
             filename = "%04i-%02i-%02i" % message.internaldate[:3]
             filename += "_%s.eml" % hashlib.sha224(msg_string).hexdigest()
             if not os.path.isfile(filename):
@@ -128,8 +149,6 @@ try:
                 if options.print_names: print filename
             print >>record_file, "%s.%s : %s" % (label, uid, filename)
             if options.verbose: print "Stored %s.%s" % (label, uid)
-            record_file.flush()
-        mailbox.close()
 except KeyboardInterrupt:
     print ""
 except Exception, errormessage:
