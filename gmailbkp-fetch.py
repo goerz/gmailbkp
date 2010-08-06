@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""Download all the messages in a Gmail acccount to eml files. Keep track of
-files in a record file"""
+"""Download all the messages in a Gmail acccount to eml files in the given
+FOLDER. Keep track of emails and labels in a record file"""
 from ProcImap.ImapMailbox import ImapMailbox
 from ProcImap.Utils.MailboxFactory import MailboxFactory
 import hashlib
@@ -14,7 +14,7 @@ class DownloadError(Exception):
     """ Raised if the Mail Message was not downloaded correctly """
     pass
 
-arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [PATH]",
+arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [FOLDER]",
                             description = __doc__)
 
 arg_parser.add_option('-v', action='store_true', dest='verbose',
@@ -24,7 +24,7 @@ arg_parser.add_option('-c', action='store', dest='config',
                     help="Use config file (default: ~/.gmaibkp.conf)")
 arg_parser.add_option('-r', action='store', dest='record',
                     default='record.txt', help="record file (default: "
-                    "record.txt). The filename is relative to the given PATH")
+                    "record.txt). The filename is relative to the given FOLDER")
 arg_parser.add_option('-p', action='store_true', dest='print_names',
                     default=False, help="Print names of newly created "
                     "eml files")

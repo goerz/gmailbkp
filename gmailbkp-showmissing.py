@@ -12,7 +12,7 @@ class DownloadError(Exception):
     """ Raised if the Mail Message was not downloaded correctly """
     pass
 
-arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [PATH]",
+arg_parser = OptionParser(usage = "gmailbkp-fetch.py [options] [FOLDER]",
                             description = __doc__)
 
 arg_parser.add_option('-c', action='store', dest='config',
@@ -20,7 +20,7 @@ arg_parser.add_option('-c', action='store', dest='config',
                     help="Use config file (default: ~/.gmaibkp.conf)")
 arg_parser.add_option('-r', action='store', dest='record',
                     default='record.txt', help="record file (default: "
-                    "record.txt). The filename is relative to the given PATH")
+                    "record.txt). The filename is relative to the given FOLDER")
 arg_parser.add_option('-s', action='store_true', dest='ignore_standard',
                     default=False, help="Add the labels '[Gmail]/Trash' "
                     "and '[Gmail]/Spam' to the exclude list.")
